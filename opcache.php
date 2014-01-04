@@ -69,7 +69,7 @@ p.capitalize {
 
 .tab label {
 	background: #eee;
-	padding: 10px;
+	padding: 8px;
 	border: 1px solid #ccc;
 	margin-left: -1px;
 	position: relative;
@@ -114,7 +114,7 @@ p.capitalize {
 
 [type=radio]:checked ~ label {
 	background: white;
-	border-bottom: 1px solid white;
+	border-bottom: 0;
 	z-index: 2;
 }
 
