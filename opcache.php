@@ -9,6 +9,14 @@ if (!extension_loaded('Zend OPcache')) {
 $config = opcache_get_configuration();
 $status = opcache_get_status();
 
+define('CACHEPREFIX',function_exists('opcache_reset')?'opcache_':(function_exists('accelerator_reset')?'accelerator_':''));
+ 
+if ( !empty($_GET['RESET']) ) {	
+	if ( function_exists(CACHEPREFIX.'reset') ) { call_user_func(CACHEPREFIX.'reset'); }
+	header( 'Location: '.str_replace('?'.$_SERVER['QUERY_STRING'],'',$_SERVER['REQUEST_URI']) );
+	exit;
+}
+
 /**
  * Turn bytes into a human readable format
  * @param $bytes
@@ -264,6 +272,16 @@ function toggleVisible(head, row) {
 			</div>
 		</div>
 
+		<div class="tab">
+			<input type="radio" id="tab-restarts" name="tab-group-1" checked>
+			<label for="tab-restarts">Restarts</label>
+			<div class="content">
+				<table>
+					<a href="?RESET=1" onclick="return confirm('Reset cache ?')">Reset</a>
+				</table>
+			</div>
+		</div>
+
 	</div>
 
 	<div id="graph">
@@ -271,6 +289,7 @@ function toggleVisible(head, row) {
 			<label><input type="radio" name="dataset" value="memory" checked> Memory</label>
 			<label><input type="radio" name="dataset" value="keys"> Keys</label>
 			<label><input type="radio" name="dataset" value="hits"> Hits</label>
+			<label><input type="radio" name="dataset" value="restarts"> Restarts</label>
 		</form>
 
 		<div id="stats"></div>
@@ -285,7 +304,8 @@ function toggleVisible(head, row) {
 	var dataset = {
 		memory: [{$mem['used_memory']},{$mem['free_memory']},{$mem['wasted_memory']}],
 		keys: [{$stats['num_cached_keys']},{$free_keys},0],
-		hits: [{$stats['misses']},{$stats['hits']},0]
+		hits: [{$stats['misses']},{$stats['hits']},0],
+		restarts: [{$stats['manual_restarts']},{$stats['hash_restarts']},{$stats['oom_restarts']}]
 	};
 	";
 	?>
@@ -337,7 +357,14 @@ function toggleVisible(head, row) {
 				"<table><tr><th style='background:#B41F1F;'>Misses</th><td>"+dataset[t][0]+"</td></tr>"+
 				"<tr><th style='background:#1FB437;'>Cache Hits</th><td>"+dataset[t][1]+"</td></tr></table>"
 			);
+		} else if(t=="restarts") {
+			d3.select("#stats").html(
+				"<table><tr><th style='background:#1f77b4;' align=right>Manual</th><td align=right>"+dataset[t][0]+"</td></tr>"+
+				"<tr><th style='background:#ff7f0e;' align=right>Keys</th><td align=right>"+dataset[t][1]+"</td></tr>"+
+				"<tr><th style='background:#aec7e8;' align=right>Memory</th><td align=right>"+dataset[t][2]+"</td></tr></table>"
+			);
 		}
+		
 	}
 
 	function change() {
